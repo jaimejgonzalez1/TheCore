@@ -109,6 +109,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         if(cA == playerCategory)
         {
             let otherNode:SKNode = contact.bodyB.node!
+//             bodyB.node! is returning nil and I can not figure out why
+            
             playerDidCollide(with: otherNode)
  
         }
