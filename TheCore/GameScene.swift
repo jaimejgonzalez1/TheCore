@@ -17,15 +17,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     var graphs = [String : GKGraph]()
     
     var player:SKSpriteNode?
-//    var otherONe
     var score:SKLabelNode!
+    var bg:SKAudioNode!
     var counter:UInt32 = 0
     let noCategory:UInt32 = 0
     let playerCategory:UInt32 = 0b1 << 1
     let enemyCategory:UInt32 = 0b1 << 2
     let goldCategory:UInt32 = 0b1 << 3
-    let gol = SKTexture(imageNamed: "gold")
-    let en = SKTexture(imageNamed: "Shark")
   
 
     
@@ -38,96 +36,98 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         player?.physicsBody?.categoryBitMask = playerCategory
         player?.physicsBody?.collisionBitMask = noCategory
         player?.physicsBody?.contactTestBitMask = enemyCategory | goldCategory
+        player?.physicsBody?.isDynamic = true
         
         score = self.childNode(withName:"score") as? SKLabelNode
-        let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
-        bg.autoplayLooped = true
-        self.addChild(bg)
+
+        
+            let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
+            bg.autoplayLooped = true
+            self.addChild(bg)
+            
+    
+     
         
 
         
     }
-     private func respawnG(){
-    
-            let drop = SKSpriteNode(texture: gol) as SKSpriteNode?
-            drop?.physicsBody = SKPhysicsBody(texture: gol, size: gol.size())
-            drop?.physicsBody?.categoryBitMask = goldCategory
-            drop?.physicsBody?.contactTestBitMask = playerCategory
-            drop?.physicsBody?.affectedByGravity = false;
+    func respawnG(){
+
         
+        var objectTexture = SKTexture()
+        objectTexture = SKTexture(imageNamed: "gold")
+        let drop = SKSpriteNode(texture: objectTexture) as SKSpriteNode?
+        drop?.physicsBody = SKPhysicsBody(rectangleOf: objectTexture.size())
+        drop?.physicsBody?.categoryBitMask = goldCategory
+        drop?.physicsBody?.contactTestBitMask = playerCategory
+        drop?.physicsBody?.affectedByGravity = false;
         
             let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
             let yPosition = size.height + (drop?.size.height)!
             drop?.position = CGPoint(x: yPosition, y: xPosition)
-            let drift = SKAction.moveTo(x:-400, duration: 5.0)
-            drop?.size.width = 30;
-            drop?.size.height = 30;
+            let drift = SKAction.moveTo(x:-600, duration: 5.0)
+            let wait = SKAction.wait(forDuration: 3)
+            let remove = SKAction.run((drop?.removeFromParent)!)
+            drop?.size.width = 30
+            drop?.size.height = 30
+            drop?.physicsBody?.isDynamic = true
         
-            drop?.run(drift)
-            SKAction.removeFromParent()
+      
             drop?.zPosition = 2
+            drop?.name = "love"
+
         
-        
-            self.addChild(drop!) 
+            drop?.run(SKAction.sequence([drift, wait, remove]))
+            self.addChild(drop!)
         
       
         
     }
-    
-// CPU LEAK WARNING
-//    private func respawnE(){
+//    func respawnE(){
 //        
-//        let drop = SKSpriteNode(texture: en)
-//        drop.physicsBody = SKPhysicsBody(texture: en, size: en.size())
-//        drop.physicsBody?.categoryBitMask = enemyCategory
-//        drop.physicsBody?.contactTestBitMask = playerCategory
-//        drop.physicsBody?.affectedByGravity = false;
 //        
+//        var objectTexture2 = SKTexture()
+//        objectTexture2 = SKTexture(imageNamed: "Shark")
+//        let sh = SKSpriteNode(texture: objectTexture2) as SKSpriteNode?
+//        sh?.physicsBody = SKPhysicsBody(rectangleOf: objectTexture2.size())
+//        sh?.physicsBody?.categoryBitMask = enemyCategory
+//        sh?.physicsBody?.contactTestBitMask = playerCategory
+//        sh?.physicsBody?.affectedByGravity = false;
 //        
 //        let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
-//        let yPosition = size.height + drop.size.height
-//        drop.position = CGPoint(x: yPosition, y: xPosition)
-//        let drift = SKAction.moveTo(x:-400, duration: 5.0)
-//        drop.size.width = 50;
-//        drop.size.height = 50;
-//        drop.run(drift)
-//        SKAction.removeFromParent()
-//        drop.zPosition = 2
+//        let yPosition = size.height + (sh?.size.height)!
+//        sh?.position = CGPoint(x: yPosition, y: xPosition)
+//        let drift = SKAction.moveTo(x:-600, duration: 5.0)
+//        let wait = SKAction.wait(forDuration: 3)
+//        let remove = SKAction.run((sh?.removeFromParent)!)
+//        sh?.size.width = 30
+//        sh?.size.height = 30
+//        sh?.physicsBody?.isDynamic = true
+//    
+//  
 //        
-//        self.addChild(drop)
+//        
+//        sh?.run(SKAction.sequence([drift, wait, remove]))
+//        self.addChild(sh!)
 //        
 //        
 //        
 //    }
+
     func didBegin(_ contact: SKPhysicsContact) {
         
         let cA:UInt32 = contact.bodyA.categoryBitMask
         let cB:UInt32 = contact.bodyB.categoryBitMask
         print(cA)
         print(cB)
-
-        if(cA == playerCategory)
-        {
-            let otherNode:SKNode = contact.bodyB.node!
+        if cA == playerCategory || cB == playerCategory {
+            let otherNode:SKNode = (cA == playerCategory) ? contact.bodyB.node!: contact.bodyA.node!
             playerDidCollide(with: otherNode)
- 
         }
-        else if(cB == playerCategory)
-        {
-            let otherNode2:SKNode = contact.bodyA.node!
-            playerDidCollide(with: otherNode2)
-      
+        else {
+            contact.bodyA.node?.removeFromParent()
+            contact.bodyB.node?.removeFromParent()
         }
-        
-        
-//        if cA == playerCategory || cB == playerCategory {
-////            let otherNode:SKNode = (cA == playerCategory) ? contact.bodyB.node!: contact.bodyA.node!
-//            playerDidCollide(with: otherNode)
-//        }
-//        else {
-//            contact.bodyA.node?.removeFromParent()
-//            contact.bodyB.node?.removeFromParent()
-//        }
     }
    
     
@@ -140,8 +140,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             
         }
         else if otherCategory == enemyCategory {
-            other.removeFromParent()
-            player?.removeFromParent()
+//            other.removeFromParent()
+//            player?.removeFromParent()
+            counter-=1
+            score.text = "00" + counter.description
         }
     }
  
@@ -152,7 +154,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         if(Rand > 19){
             respawnG()
         }
-//        if(Rand < 2){
+//        if(Rand < 1){
 //            respawnE()
 //        }
     }
@@ -196,6 +198,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     
     override func update(_ currentTime: TimeInterval) {
         generator()
+
+        
         
     }
    
