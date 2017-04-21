@@ -120,8 +120,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         let cB:UInt32 = contact.bodyB.categoryBitMask
         print(cA)
         print(cB)
+<<<<<<< HEAD
         if cA == playerCategory || cB == playerCategory {
             let otherNode:SKNode = (cA == playerCategory) ? contact.bodyB.node!: contact.bodyA.node!
+=======
+
+        if(cA == playerCategory)
+        {
+            let otherNode:SKNode = contact.bodyB.node!
+//             bodyB.node! is returning nil and I can not figure out why
+            
+>>>>>>> 974df22aed5041ba4db633871b426a67c5a3eba9
             playerDidCollide(with: otherNode)
         }
         else {
