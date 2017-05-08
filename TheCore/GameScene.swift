@@ -9,6 +9,7 @@
 import SpriteKit
 import GameplayKit
 import UIKit
+import AVFoundation
 
 class GameScene: SKScene, SKPhysicsContactDelegate{
     
@@ -31,10 +32,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
   
 
     
-    
-    
+
     override func didMove(to view: SKView) {
         self.physicsWorld.contactDelegate = self
+        
+        
         
         player = self.childNode(withName: "player") as? SKSpriteNode
         player?.physicsBody?.categoryBitMask = playerCategory
