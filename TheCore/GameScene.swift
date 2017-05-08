@@ -18,12 +18,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     
     var player:SKSpriteNode?
     var score:SKLabelNode!
+    var health:SKLabelNode!
+    var viewController: UIViewController?
     var bg:SKAudioNode!
+    var healthBar:UInt32 = 100;
     var counter:UInt32 = 0
     let noCategory:UInt32 = 0
     let playerCategory:UInt32 = 0b1 << 1
     let enemyCategory:UInt32 = 0b1 << 2
     let goldCategory:UInt32 = 0b1 << 3
+    let userDefults = UserDefaults.standard ///returns shared defaults object.
   
 
     
@@ -38,26 +42,43 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         player?.physicsBody?.contactTestBitMask = enemyCategory | goldCategory
         player?.physicsBody?.isDynamic = true
         
-        score = self.childNode(withName:"score") as? SKLabelNode
 
         
-            let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
-            bg.autoplayLooped = true
-            self.addChild(bg)
-            
+        score = self.childNode(withName:"score") as? SKLabelNode
+        health = self.childNode(withName: "health") as? SKLabelNode
+
+        
+        
+        
+        
+//  
+//            let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
+//            bg.autoplayLooped = true
+//            self.addChild(bg)
+        
     
      
         
 
         
     }
+//    func isFirstLaunch() -> Bool {
+//        let flag = "flag"
+//        let isFirstLaunch = !UserDefaults.standard.bool(forKey: flag)
+//        if (isFirstLaunch) {
+//            UserDefaults.standard.set(true, forKey: flag)
+//            UserDefaults.standard.synchronize()
+//        }
+//        return isFirstLaunch
+//    }
+//    
     func respawnG(){
 
         
         var objectTexture = SKTexture()
         objectTexture = SKTexture(imageNamed: "gold")
         let drop = SKSpriteNode(texture: objectTexture) as SKSpriteNode?
-        drop?.physicsBody = SKPhysicsBody(rectangleOf: objectTexture.size())
+        drop?.physicsBody = SKPhysicsBody(texture: objectTexture, size:objectTexture.size())
         drop?.physicsBody?.categoryBitMask = goldCategory
         drop?.physicsBody?.contactTestBitMask = playerCategory
         drop?.physicsBody?.affectedByGravity = false;
@@ -65,7 +86,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
             let yPosition = size.height + (drop?.size.height)!
             drop?.position = CGPoint(x: yPosition, y: xPosition)
-            let drift = SKAction.moveTo(x:-600, duration: 5.0)
+            let drift = SKAction.moveTo(x:-600, duration: 3.0)
             let wait = SKAction.wait(forDuration: 3)
             let remove = SKAction.run((drop?.removeFromParent)!)
             drop?.size.width = 30
@@ -73,8 +94,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             drop?.physicsBody?.isDynamic = true
         
       
-            drop?.zPosition = 2
-            drop?.name = "love"
+            drop?.zPosition = 99
 
         
             drop?.run(SKAction.sequence([drift, wait, remove]))
@@ -83,36 +103,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
       
         
     }
-//    func respawnE(){
-//        
-//        
-//        var objectTexture2 = SKTexture()
-//        objectTexture2 = SKTexture(imageNamed: "Shark")
-//        let sh = SKSpriteNode(texture: objectTexture2) as SKSpriteNode?
-//        sh?.physicsBody = SKPhysicsBody(rectangleOf: objectTexture2.size())
-//        sh?.physicsBody?.categoryBitMask = enemyCategory
-//        sh?.physicsBody?.contactTestBitMask = playerCategory
-//        sh?.physicsBody?.affectedByGravity = false;
-//        
-//        let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
-//        let yPosition = size.height + (sh?.size.height)!
-//        sh?.position = CGPoint(x: yPosition, y: xPosition)
-//        let drift = SKAction.moveTo(x:-600, duration: 5.0)
-//        let wait = SKAction.wait(forDuration: 3)
-//        let remove = SKAction.run((sh?.removeFromParent)!)
-//        sh?.size.width = 30
-//        sh?.size.height = 30
-//        sh?.physicsBody?.isDynamic = true
-//    
-//  
-//        
-//        
-//        sh?.run(SKAction.sequence([drift, wait, remove]))
-//        self.addChild(sh!)
-//        
-//        
-//        
-//    }
+    func respawnE(){
+        
+        
+        var objectTexture2 = SKTexture()
+        objectTexture2 = SKTexture(imageNamed: "enemy")
+        let sh = SKSpriteNode(texture: objectTexture2) as SKSpriteNode?
+        sh?.physicsBody = SKPhysicsBody(texture: objectTexture2, size: objectTexture2.size())
+        sh?.physicsBody?.categoryBitMask = enemyCategory
+        sh?.physicsBody?.contactTestBitMask = playerCategory
+        sh?.physicsBody?.affectedByGravity = false;
+        
+        let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
+        let yPosition = size.height + (sh?.size.height)!
+        sh?.position = CGPoint(x: yPosition, y: xPosition)
+        let drift = SKAction.moveTo(x:-600, duration: 3.0)
+        let wait = SKAction.wait(forDuration: 3)
+        let remove = SKAction.run((sh?.removeFromParent)!)
+        sh?.size.width = 80
+        sh?.size.height = 80
+        sh?.physicsBody?.isDynamic = true
+        sh?.physicsBody?.allowsRotation = false
+        sh?.zRotation = CGFloat(M_PI_4)
+     
+  
+        
+        
+        sh?.run(SKAction.sequence([drift, wait, remove]))
+        self.addChild(sh!)
+        
+        
+        
+    }
 
     func didBegin(_ contact: SKPhysicsContact) {
         
@@ -120,17 +142,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         let cB:UInt32 = contact.bodyB.categoryBitMask
         print(cA)
         print(cB)
-<<<<<<< HEAD
         if cA == playerCategory || cB == playerCategory {
-            let otherNode:SKNode = (cA == playerCategory) ? contact.bodyB.node!: contact.bodyA.node!
-=======
+            let otherNode : SKNode = (cA == playerCategory) ? contact.bodyB.node!: contact.bodyA.node!
+        }
 
         if(cA == playerCategory)
         {
             let otherNode:SKNode = contact.bodyB.node!
-//             bodyB.node! is returning nil and I can not figure out why
-            
->>>>>>> 974df22aed5041ba4db633871b426a67c5a3eba9
+
+
             playerDidCollide(with: otherNode)
         }
         else {
@@ -145,14 +165,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         if otherCategory == goldCategory {
             other.removeFromParent()
             counter+=1
-            score.text = "00" + counter.description
+            userDefults.set(counter, forKey: "score")
+            if(counter >= 50){
+               self.viewController?.performSegue(withIdentifier: "winner", sender: self)
+                print("hereWIN")
+            }
             
         }
         else if otherCategory == enemyCategory {
-//            other.removeFromParent()
-//            player?.removeFromParent()
-            counter-=1
-            score.text = "00" + counter.description
+            print("HIT")
+            other.removeFromParent()
+            player?.alpha = 0.7
+            if healthBar > 0{
+            healthBar -= 10
+            userDefults.set(healthBar, forKey:"health")
+            }
+            else{
+                self.viewController?.performSegue(withIdentifier: "loser", sender: self)
+                print("hereDEAD")
+            }
         }
     }
  
@@ -163,9 +194,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         if(Rand > 19){
             respawnG()
         }
-//        if(Rand < 1){
-//            respawnE()
-//        }
+        if(Rand < 1){
+            respawnE()
+        }
     }
     func randomBetweenNumbers(firstNum: CGFloat, secondNum: CGFloat) -> CGFloat{
         return CGFloat(arc4random()) / CGFloat(UINT32_MAX) * abs(firstNum - secondNum) + min(firstNum, secondNum)
@@ -178,10 +209,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     
     func touchMoved(toPoint pos : CGPoint) {
         player?.position = CGPoint(x:-250,y:pos.y)
-        if player!.position.y < UIScreen.main.bounds.size.height
-        {
-            
-        }
+       
     }
     
     func touchUp(atPoint pos : CGPoint) {
@@ -207,7 +235,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     
     override func update(_ currentTime: TimeInterval) {
         generator()
-
+        healthBar = userDefults.value(forKey: "health") as! UInt32
+        counter = userDefults.value(forKey: "score") as! UInt32
+        
+        score.text = counter.description
+        health.text = healthBar.description + "%"
         
         
     }
