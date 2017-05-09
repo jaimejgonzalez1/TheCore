@@ -9,9 +9,9 @@
 import SpriteKit
 import GameplayKit
 import UIKit
-import AVFoundation
 
-class GameScene: SKScene, SKPhysicsContactDelegate{
+
+class GameScene: SKScene , SKPhysicsContactDelegate{
     
     
     var entities = [GKEntity]()
@@ -20,6 +20,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
     var player:SKSpriteNode?
     var score:SKLabelNode!
     var health:SKLabelNode!
+    var labelR:SKLabelNode!
+
     var viewController: UIViewController?
     var bg:SKAudioNode!
     var healthBar:UInt32 = 100;
@@ -37,66 +39,57 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         self.physicsWorld.contactDelegate = self
         
         
-        
+   
         player = self.childNode(withName: "player") as? SKSpriteNode
         player?.physicsBody?.categoryBitMask = playerCategory
         player?.physicsBody?.collisionBitMask = noCategory
         player?.physicsBody?.contactTestBitMask = enemyCategory | goldCategory
         player?.physicsBody?.isDynamic = true
         
+        userDefults.set(0, forKey: "score")
+        userDefults.set(100, forKey:"health")
 
-        
         score = self.childNode(withName:"score") as? SKLabelNode
         health = self.childNode(withName: "health") as? SKLabelNode
+        labelR = self.childNode(withName: "labelR") as? SKLabelNode
+        
+        labelR.isHidden = true;
 
         
         
         
         
-//  
-//            let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
-//            bg.autoplayLooped = true
-//            self.addChild(bg)
-        
+  
+        let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
+        bg.autoplayLooped = true
+        self.addChild(bg)        
     
      
         
 
         
     }
-//    func isFirstLaunch() -> Bool {
-//        let flag = "flag"
-//        let isFirstLaunch = !UserDefaults.standard.bool(forKey: flag)
-//        if (isFirstLaunch) {
-//            UserDefaults.standard.set(true, forKey: flag)
-//            UserDefaults.standard.synchronize()
-//        }
-//        return isFirstLaunch
-//    }
-//    
     func respawnG(){
 
         
         var objectTexture = SKTexture()
         objectTexture = SKTexture(imageNamed: "gold")
         let drop = SKSpriteNode(texture: objectTexture) as SKSpriteNode?
-        drop?.physicsBody = SKPhysicsBody(texture: objectTexture, size:objectTexture.size())
+        drop?.physicsBody = SKPhysicsBody(texture: objectTexture, size:CGSize(width:20,height:20))
         drop?.physicsBody?.categoryBitMask = goldCategory
         drop?.physicsBody?.contactTestBitMask = playerCategory
         drop?.physicsBody?.affectedByGravity = false;
         
-            let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
+            let xPosition = (CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width))-100
             let yPosition = size.height + (drop?.size.height)!
             drop?.position = CGPoint(x: yPosition, y: xPosition)
             let drift = SKAction.moveTo(x:-600, duration: 3.0)
             let wait = SKAction.wait(forDuration: 3)
             let remove = SKAction.run((drop?.removeFromParent)!)
-            drop?.size.width = 30
-            drop?.size.height = 30
+            drop?.size.width = 20
+            drop?.size.height = 20
             drop?.physicsBody?.isDynamic = true
         
-      
-            drop?.zPosition = 99
 
         
             drop?.run(SKAction.sequence([drift, wait, remove]))
@@ -111,19 +104,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
         var objectTexture2 = SKTexture()
         objectTexture2 = SKTexture(imageNamed: "enemy")
         let sh = SKSpriteNode(texture: objectTexture2) as SKSpriteNode?
-        sh?.physicsBody = SKPhysicsBody(texture: objectTexture2, size: objectTexture2.size())
+        sh?.physicsBody = SKPhysicsBody(texture: objectTexture2, size: CGSize(width:60,height:60))
         sh?.physicsBody?.categoryBitMask = enemyCategory
         sh?.physicsBody?.contactTestBitMask = playerCategory
         sh?.physicsBody?.affectedByGravity = false;
         
-        let xPosition = CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width)
+        let xPosition = (CGFloat(arc4random()).truncatingRemainder(dividingBy: size.width))-100
         let yPosition = size.height + (sh?.size.height)!
         sh?.position = CGPoint(x: yPosition, y: xPosition)
         let drift = SKAction.moveTo(x:-600, duration: 3.0)
         let wait = SKAction.wait(forDuration: 3)
         let remove = SKAction.run((sh?.removeFromParent)!)
-        sh?.size.width = 80
-        sh?.size.height = 80
+        sh?.size.width = 60
+        sh?.size.height = 60
         sh?.physicsBody?.isDynamic = true
         sh?.physicsBody?.allowsRotation = false
         sh?.zRotation = CGFloat(M_PI_4)
@@ -168,32 +161,42 @@ class GameScene: SKScene, SKPhysicsContactDelegate{
             other.removeFromParent()
             counter+=1
             userDefults.set(counter, forKey: "score")
-            if(counter >= 50){
-               self.viewController?.performSegue(withIdentifier: "winner", sender: self)
-                print("hereWIN")
+            if(counter > 50){
+                labelR.text = "YOU WIN"
+                labelR.isHidden = false;
+                self.isPaused = true
+
             }
+        
             
         }
         else if otherCategory == enemyCategory {
             print("HIT")
             other.removeFromParent()
             player?.alpha = 0.7
-            if healthBar > 0{
+            if healthBar > 10{
             healthBar -= 10
             userDefults.set(healthBar, forKey:"health")
             }
             else{
-                self.viewController?.performSegue(withIdentifier: "loser", sender: self)
-                print("hereDEAD")
+        
+                labelR.text = "YOU LOSE"
+                labelR.isHidden = false;
+                labelR.color = UIColor.red
+                self.isPaused = true
+
+               
+                
             }
-        }
+            }
     }
+    
  
     func generator()
     {
         let Rand = randomBetweenNumbers(firstNum: 0, secondNum: 20)
         print(Rand)
-        if(Rand > 19){
+        if(Rand > 19.5){
             respawnG()
         }
         if(Rand < 1){
