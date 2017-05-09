@@ -9,11 +9,12 @@
 import SpriteKit
 import GameplayKit
 import UIKit
+import AVFoundation
 
 
 class GameScene: SKScene , SKPhysicsContactDelegate{
     
-    
+    var audioPlayer = AVAudioPlayer()
     var entities = [GKEntity]()
     var graphs = [String : GKGraph]()
     
@@ -63,7 +64,17 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
         let bg:SKAudioNode = SKAudioNode(fileNamed:"loop.wav")
         bg.autoplayLooped = true
         self.addChild(bg)        
-    
+        
+        let music = Bundle.main.path(forResource: "coin", ofType: "wav")
+        // copy this syntax, it tells the compiler what to do when action is received
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: music! ))
+            try AVAudioSession.sharedInstance().setCategory(AVAudioSessionCategoryAmbient)
+            try AVAudioSession.sharedInstance().setActive(true)
+        }
+        catch{
+            print(error)
+        }
      
         
 
@@ -158,6 +169,7 @@ class GameScene: SKScene , SKPhysicsContactDelegate{
     func playerDidCollide(with other:SKNode) {
         let otherCategory = other.physicsBody?.categoryBitMask
         if otherCategory == goldCategory {
+            audioPlayer.play()
             other.removeFromParent()
             counter+=1
             userDefults.set(counter, forKey: "score")
